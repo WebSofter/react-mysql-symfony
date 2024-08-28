@@ -1,0 +1,55 @@
+#docker-compose.yml
+version: "3.8"
+
+services:
+  php:
+    container_name: ${DOCKER_PREFIX}_php
+    build: ./docker/php
+    volumes:
+      - ./backend:/var/www/html
+    networks:
+      - symfony
+
+  nginx:
+    container_name: ${DOCKER_PREFIX}_nginx
+    build: ./docker/nginx
+    ports:
+      - "${BACKEND_PORT}:80"
+    volumes:
+      - ./backend:/var/www/html
+      #  - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - symfony
+
+  db:
+    image: mysql:8.0.1
+    container_name: ${DOCKER_PREFIX}_db
+    environment:
+      # MYSQL_ROOT_PASSWORD: secret
+      # MYSQL_DATABASE: symfony
+      # MYSQL_USER: symfony
+      # MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ./docker/mysql/data:/var/lib/mysql
+    networks:
+      - symfony
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: ${DOCKER_PREFIX}_pma
+    environment:
+      UPLOAD_LIMIT: 100000000
+    #   PMA_HOST: db
+    depends_on:
+      - db
+    ports:
+      - 8002:80
+    networks:
+      - symfony
+
+networks:
+    symfony:
